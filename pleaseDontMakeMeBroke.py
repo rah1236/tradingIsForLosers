@@ -8,8 +8,8 @@ auth_client =   coinbasepro.AuthenticatedClient(api_key,api_secret,passphrase)
 
 
 
-orderCompletePeriod = 25 #number of seconds to wait before checking api if order is complete
-loopPeriod = 120         #number of seconds to wait for going thru the whole loop
+orderCompletePeriod = 10 #number of seconds to wait before checking api if order is complete
+loopPeriod = 60         #number of seconds to wait for going thru the whole loop
 
 loopEnable = True        #toggles trading loop
 
@@ -43,23 +43,26 @@ def getUSDBalance():
 while loopEnable:
     random.seed(getNewSeed())
 
-    print("Current ETH Balance: {}".format(getETHBalance()))
+    USDBalance = getUSDBalance()
+    ETHBalance = getETHBalance()
+
+    print("Current ETH Balance: {}".format(ETHBalance))
+    print("Current USD Balance: ${}".format(USDBalance))
 
     ticker = public_client.get_product_ticker(productID)
     buyPrice = float(ticker['price'])
     sellPrice = float(ticker['price'])
 
-    USDBalance = getUSDBalance()
 
     if (random.choice([True,False]) and USDBalance < 125.0 and USDBalance > 10.0): #buying
-        buySize = round(random.uniform(0.003, 0.02),5)
+        buySize = round(random.uniform(0.003, 0.02),5) #coinbase gets upset if you try to have more accuracy than 1e-8
         while(buySize*buyPrice > USDBalance):
             buySize = round(random.uniform(0.003, 0.02),5)
         print('Buying {} ETH at ${} per Eth. (${})'.format(buySize, buyPrice, float(buyPrice)*float(buySize)))
         buy_order = auth_client.place_limit_order(product_id=productID, side='buy', price=buyPrice, size=buySize)
         if (auth_client.get_order((buy_order['id']))['filled_size'] > 0):#auth_client.get_order((buy_order['id']))['status'] == 'done'): #this is fucking ratchet
              print()
-             print('!!BOUGHT {} ETH at ${} per Eth. (${})'.format(buySize, buyPrice, float(buyPrice)*float(buySize)))
+             print('!!BOUGHT {} ETH at ${} per Eth. (${})'.format(buySize, buyPrice, round(float(buyPrice)*float(buySize),2)))
              lastBuyPrice = buyPrice
              lastBuySize = buySize
         else:
@@ -67,7 +70,7 @@ while loopEnable:
                 print("waiting for buy order to complete")
                 time.sleep(orderCompletePeriod)
             print()
-            print('!!Bought {} ETH at ${} per Eth. (${})'.format(buySize, buyPrice, float(buyPrice)*float(buySize)))
+            print('!!Bought {} ETH at ${} per Eth. (${})'.format(buySize, buyPrice, round(float(buyPrice)*float(buySize),2)))
             lastBuyPrice = buyPrice
             lastBuySize = buySize
     else:
@@ -75,12 +78,12 @@ while loopEnable:
     
     if(random.choice([True,False])): #selling
         sellSize = round(random.uniform(0.005, 0.02), 5)
-        if (sellSize < getETHBalance() and sellSize <= lastBuySize):
+        if (sellSize < getETHBalance()):
             print('Selling {} ETH at ${} per Eth. (${})'.format(sellSize, sellPrice, float(sellPrice)*float(sellSize)))
             sell_order = auth_client.place_limit_order(product_id=productID, side='sell', price=sellPrice, size=sellSize)
             if (auth_client.get_order((sell_order['id']))['filled_size'] > 0): #this is fucking ratchet
                 print()
-                print('!!SOLD {} ETH at ${} per Eth. (${})'.format(sellSize, sellPrice, float(sellPrice)*float(sellSize)))
+                print('!!SOLD {} ETH at ${} per Eth. (${})'.format(sellSize, sellPrice, round(float(sellPrice)*float(sellSize),2)))
                 lastBuyPrice = buyPrice
                 lastBuySize = buySize
             else:
@@ -88,7 +91,7 @@ while loopEnable:
                     print("waiting for sell order to complete")
                     time.sleep(orderCompletePeriod) #self rate limitting, dont want to sell my whole account
                 print()
-                print('!!SOLD {} ETH at ${} per Eth. (${})'.format(sellSize, sellPrice, float(sellPrice)*float(sellSize)))
+                print('!!SOLD {} ETH at ${} per Eth. (${})'.format(sellSize, sellPrice, round(float(sellPrice)*float(sellSize),2)))
                 lastSellPrice = sellPrice
                 lastBuySize = sellSize
     
