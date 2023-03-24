@@ -39,8 +39,11 @@ def getETHBalance():
 def getUSDBalance():
     return((auth_client.get_account(acct_id_USD)['available']))
 
-def getWatchdog(counter, countTo):
+
+def getWatchdog(counter, countTo, auth_client):
     counter += 1
+    if (counter == countTo):
+       auth_client.cancel_all()
     return (counter == countTo)
 
 def resetWatchdog(counter):
@@ -79,7 +82,7 @@ while loopEnable:
              lastBuyPrice = buyPrice 
              lastBuySize = buySize
         else:
-            while(getWatchdog(buyOrderTimeoutWatchdog,buyOrderTimeout) or auth_client.get_order((buy_order['id']))['filled_size'] <= 0):
+            while(getWatchdog(buyOrderTimeoutWatchdog,buyOrderTimeout,auth_client) or auth_client.get_order((buy_order['id']))['filled_size'] <= 0):
                 print("waiting for buy order to complete")
                 time.sleep(orderCompletePeriod)
             resetWatchdog(buyOrderTimeoutWatchdog)
@@ -97,7 +100,7 @@ while loopEnable:
             lastBuyPrice = buyPrice
             lastBuySize = buySize
         else:
-            while(getWatchdog(buyOrderTimeoutWatchdog,buyOrderTimeout) or auth_client.get_order((sell_order['id']))['filled_size'] <= 0):
+            while(getWatchdog(buyOrderTimeoutWatchdog,buyOrderTimeout,auth_client) or auth_client.get_order((sell_order['id']))['filled_size'] <= 0):
                 print("waiting for sell order to complete")
                 time.sleep(orderCompletePeriod) #self rate limitting, dont want to sell my whole account
             resetWatchdog(buyOrderTimeoutWatchdog)
