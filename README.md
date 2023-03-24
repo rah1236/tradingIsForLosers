@@ -1,6 +1,8 @@
 # tradingIsForLosers
 A Coinbase Pro based trading algorithm that is completely (psuedo) random
 
+#THIS MACHINE TURNS MONEY INTO DUST, ONLY INVEST WHAT YOU'RE WILLING TO LOSE
+
 Dependencies:
 
  ```
